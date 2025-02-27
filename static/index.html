@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Images Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .gallery-item {
+            width: 70%;
+            margin: 0 auto 20px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+    <!-- Preload images -->
+    <link rel="preload" as="image" href="img/cite_1.png">
+    <link rel="preload" as="image" href="img/cite_2.png">
+    <link rel="preload" as="image" href="img/cite_3.png">
+    <link rel="preload" as="image" href="img/cite_4.png">
+    <link rel="preload" as="image" href="img/cite_5.png">
+    <link rel="preload" as="image" href="img/cite_6.png">
+</head>
+<body>
+
+<h1>Эскизы будущего приложения</h1>
+
+<script>
+    const folderPath = 'img';
+
+    const images = [
+        'cite_1.png',
+        'cite_2.png',
+        'cite_3.png',
+        'cite_4.png',
+        'cite_5.png',
+        'cite_6.png'
+    ];
+
+    const body = document.querySelector('body');
+
+    images.forEach(image => {
+        const img = document.createElement('img');
+        img.src = folderPath + '/' + image;
+        img.alt = image;
+        
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.appendChild(img);
+        
+        body.appendChild(galleryItem);
+    });
+</script>
+
+</body>
+</html>

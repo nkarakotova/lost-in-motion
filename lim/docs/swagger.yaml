@@ -1,0 +1,540 @@
+swagger: '2.0'
+
+info:
+  version: 1.0.0
+  title: Lost In Motion
+host: 0.0.0.0:8081
+basePath: /api/v1
+
+tags:
+  - name: auth
+  - name: schedule
+  - name: clients
+  - name: coaches
+  - name: halls
+  - name: trainings
+  - name: assignments
+
+schemes:
+  - http
+
+#####################################################################
+
+paths:
+
+  /signup:
+    post:
+      summary: Create client
+      tags:
+        - auth
+      operationId: signup 
+      parameters:
+        - in: body
+          name: client_info
+          description: "Информация о клиенте для регистрации"
+          required: true
+          schema:
+            $ref: '#/definitions/ClientInfo'
+      responses:
+        201:
+          description: Client successfully created
+        409:
+          description: Client alredy exists
+        422:
+          description: Invalid params
+        500:
+          description: Internal error
+      
+  /login:
+    post:
+      summary: Login
+      tags:
+        - auth
+      operationId: login
+      parameters:
+        - in: body
+          name: client_login_info
+          description: "Информация о клиенте для входа"
+          required: true
+          schema:
+            $ref: '#/definitions/ClientLoginInfo'
+      responses:
+        200:
+          description: Client successfully logged in
+          schema:
+            $ref: '#/definitions/Token'
+        401:
+          description: Authorization error
+        404:
+          description: Not Found
+        500:
+          description: Internal error
+
+  /schedule:
+    get:
+      summary: Get training schedule
+      tags:
+        - schedule
+      operationId: getSchedule
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Training'
+        500:
+          description: Internal error
+
+  /clients:
+    patch:
+      summary: Change password
+      tags:
+        - clients
+      security:
+        - JWTAuth: [ ]
+      operationId: changePassword
+      parameters:
+        - in: body
+          name: new_password
+          description: "Новый пароль"
+          required: true
+          schema:
+            $ref: '#/definitions/ClientChangePassword'
+      responses:
+        200:
+          description: Success
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        404:
+          description: No such client
+        500:
+          description: Internal error
+
+  /clients/trainings:
+    get:
+      summary: Get trainings by client
+      tags:
+        - clients
+      security:
+        - JWTAuth: [ ]
+      operationId: getTrainingsByClient
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Training'
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        500:
+          description: Internal error
+
+  /assignments:
+    post:
+      summary: Create assignment
+      tags:
+        - assignments
+      security:
+        - JWTAuth: [ ]
+      operationId: CreateAssignment
+      parameters:
+        - in: body
+          name: training_id
+          description: "Идентификатор тренировки"
+          required: true
+          schema:
+            $ref: '#/definitions/TrainingID'
+      responses:
+        201:
+          description: Assignment successfully created
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        404:
+          description: Not found
+        409:
+          description: Validation error
+        422:
+          description: Invalid params
+        500:
+          description: Internal error
+    delete:
+      summary: Delete assignment
+      tags:
+        - assignments
+      security:
+        - JWTAuth: [ ]
+      operationId: DeleteAssignment
+      parameters:
+        - in: body
+          name: training_id
+          description: "Идентификатор тренировки"
+          required: true
+          schema:
+            $ref: '#/definitions/TrainingID'
+      responses:
+        200:
+          description: Assignment successfully deleted
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        404:
+          description: Not found
+        422:
+          description: Invalid params
+        500:
+          description: Internal error
+
+  /coaches:
+    post:
+      summary: Create coach
+      tags:
+        - coaches
+      security:
+        - JWTAuth: [ ]
+      operationId: createCoach
+      parameters:
+        - in: body
+          name: coach_info
+          description: "Информация о тренере для создания"
+          required: true
+          schema:
+            $ref: '#/definitions/CoachInfo'
+      responses:
+        201:
+          description: Coach successfully created
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        409:
+          description: Coach alredy exists
+        500:
+          description: Internal error
+    get:
+      summary: Get coaches
+      tags:
+        - coaches
+      security:
+        - JWTAuth: [ ]
+      operationId: getCoaches
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Coach'
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        500:
+          description: Internal error
+
+  /halls:
+    post:
+      summary: Create hall
+      tags:
+        - halls
+      security:
+        - JWTAuth: [ ]
+      operationId: createHall
+      parameters:
+        - in: body
+          name: hall_info
+          description: "Информация о зале для создания"
+          required: true
+          schema:
+            $ref: '#/definitions/HallInfo'
+      responses:
+        201:
+          description: Hall successfully created
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        409:
+          description: Hall alredy exists
+        500:
+          description: Internal error
+
+  /halls/{date}: 
+    get:
+      summary: Get halls by date
+      tags:
+        - halls
+      security:
+        - JWTAuth: [ ]
+      operationId: getHalls
+      parameters:
+        - in: path
+          name: date
+          required: true
+          type: string
+          format: date
+          description: "Дата"
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                timestamp:
+                  type : string
+                  format: time
+                hall:
+                  type: array
+                  items:
+                    $ref: '#/definitions/Hall'
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        422:
+          description: Invalid params 
+        500:
+          description: Internal error
+
+  /trainings:
+    post:
+      summary: Create training
+      tags:
+        - trainings
+      security:
+        - JWTAuth: [ ]
+      operationId: createTraining
+      parameters:
+        - in: body
+          name: training_info
+          description: "Информация о тренировке для создания"
+          required: true
+          schema:
+            $ref: '#/definitions/TrainingInfo'
+      responses:
+        201:
+          description: Training successfully created
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        404:
+          description: Not found
+        409:
+          description: Conflict error
+        422:
+          description: Invalid params
+        500:
+          description: Internal error
+
+    delete:
+      summary: Delete training
+      tags:
+        - trainings
+      security:
+        - JWTAuth: [ ]
+      operationId: deleteTraining
+      parameters:
+        - in: body
+          name: training_id
+          description: "Идентификатор тренировки"
+          required: true
+          schema:
+            $ref: '#/definitions/TrainingID'
+      responses:
+        200:
+          description: Training successfully deleted
+        401:
+          description: Authorization error
+        403:
+          description: No rights
+        404:
+          description: Not found
+        500:
+          description: Internal error
+
+#####################################################################
+
+definitions:
+  Client:
+    type: object
+    required:
+      - client_id
+      - name
+      - telephone
+      - email
+      - password
+    properties:
+      client_id:
+        type: integer
+        format: uint64
+      name:
+        type: string
+      telephone:
+        type: string
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+  ClientInfo:
+    type: object
+    required:
+      - name
+      - telephone
+      - email
+      - password
+    properties:
+      name:
+        type: string
+      telephone:
+        type: string
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+  ClientLoginInfo:
+    type: object
+    required:
+      - telephone
+      - password
+    properties:
+      telephone:
+        type: string
+      password:
+        type: string
+  ClientChangePassword:
+    type: object
+    required:
+      - password
+    properties:
+      password:
+        type: string
+
+  Coach:
+    type: object
+    required:
+      - coach_id
+      - name
+    properties:
+      coach_id:
+        type: integer
+        format: uint64
+      name:
+        type: string
+  CoachInfo:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+
+  Hall:
+    type: object
+    required:
+      - hall_id
+      - number
+    properties:
+      hall_id:
+        type: integer
+        format: uint64
+      number:
+        type: integer
+        format: uint64
+  HallInfo:
+    type: object
+    required:
+      - number
+    properties:
+      number:
+        type: integer
+        format: uint64
+
+  Training:
+    type: object
+    required:
+      - training_id
+      - coach_name
+      - hall_number
+      - name
+      - date_time
+      - places_num
+    properties:
+      training_id:
+        type: integer
+        format: uint64
+      coach_name:
+        type: string
+      hall_number:
+        type: integer
+        format: uint64
+      name:
+        type: string
+      date_time:
+        type: string
+        format: date-time
+      places_num:
+        type: integer
+        format: uint64
+  TrainingInfo:
+    type: object
+    required:
+      - coach_name
+      - hall_number
+      - name
+      - date_time
+      - places_num
+    properties:
+      coach_name:
+        type: string
+      hall_number:
+        type: integer
+        format: uint64
+      name:
+        type: string
+      date_time:
+        type: string
+        format: date-time
+      places_num:
+        type: integer
+        format: uint64
+  TrainingID:
+    type: object
+    required:
+      - training_id
+    properties:
+      training_id:
+        type: integer
+        format: uint64
+  
+  Token:
+    type: object
+    properties:
+      access_key:
+        type: string
+        description: "JWT access key"
+
+securityDefinitions:
+  JWTAuth:
+    in:   header
+    name: token
+    type: apiKey 
+
+responses:
+  UnauthorizedError:
+    description: Authentication error
+    headers:
+      WWW_Authenticate:
+        type: string

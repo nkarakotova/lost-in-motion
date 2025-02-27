@@ -1,0 +1,17 @@
+{
+    "postgres": {
+      "host": "postgres-slave",
+      "user": "postgres",
+      "password": "12345",
+      "port": "5432",
+      "dbname": "postgres"
+    },
+
+    "mode" : "tech",
+    "loglevel": "info",
+    "logfile" : "info.log",
+    "admin_login": "0000000000",
+    "admin_password": "12345",
+    "first_training_time": 10,
+    "last_training_time": 19
+}

@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+
+  lim-backend:
+    container_name: lim-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/lim-rest-api --host 0.0.0.0 --port 8080
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./info.log:/app/info.log
+      - ./lim/cmd/app/config.json:/app/cmd/app/config.json
+    depends_on:
+      - postgres-master
+    networks:
+      - limnet
+
+  lim-backend-ro1:
+    container_name: lim-backend-ro1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/lim-rest-api --host 0.0.0.0 --port 8080
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./info-ro1.log:/app/info.log
+      - ./lim/cmd/app/config-ro.json:/app/cmd/app/config.json
+    depends_on:
+      - postgres-slave
+    networks:
+      - limnet
+
+  lim-backend-ro2:
+    container_name: lim-backend-ro2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/lim-rest-api --host 0.0.0.0 --port 8080
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./info-ro2.log:/app/info.log
+      - ./lim/cmd/app/config-ro.json:/app/cmd/app/config.json
+    depends_on:
+      - postgres-slave
+    networks:
+      - limnet
+
+  lim-backend-mirror:
+    container_name: lim-backend-mirror
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/lim-rest-api --host 0.0.0.0 --port 8080
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./info-mirror.log:/app/info.log
+      - ./lim/cmd/app/config.json:/app/cmd/app/config.json
+    depends_on:
+      - postgres-master
+    networks:
+      - limnet
+
+  postgres-master:
+    container_name: postgres-master
+    restart: always
+    image: bitnami/postgresql:16
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "12345"
+      POSTGRESQL_REPLICATION_MODE: "master"
+      POSTGRESQL_REPLICATION_USER: "repl_user"
+      POSTGRESQL_REPLICATION_PASSWORD: "12345"
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./lim/database/postgreSQL/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./pg-data:/var/lib/postgresql/data
+    networks:
+      - limnet
+  
+  postgres-slave:
+    container_name: postgres-slave
+    restart: always
+    image: bitnami/postgresql:16
+    depends_on:
+      - postgres-master
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "12345"
+      POSTGRESQL_MASTER_HOST: "postgres-master"
+      POSTGRESQL_REPLICATION_MODE: "slave"
+      POSTGRESQL_REPLICATION_USER: "repl_user"
+      POSTGRESQL_REPLICATION_PASSWORD: "12345"
+    ports:
+      - "15433:5432"
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+    networks:
+      - limnet
+
+  pgadmin:
+    image: dpage/pgadmin4:7
+    env_file:
+      - .env
+    ports: 
+      - 5435:80
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    environment: 
+      TZ: "Europe/Moscow"
+    depends_on:
+      - postgres-master
+    networks:
+      - limnet
+
+networks:
+  limnet:
+    driver: bridge

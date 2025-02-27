@@ -1,0 +1,16 @@
+.button {
+  background-color: #7D7D7D;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+  
+.button.pressed {
+  background-color: #E0E0E0;
+}
+
+
+        
