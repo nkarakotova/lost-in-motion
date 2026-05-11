@@ -69,40 +69,60 @@ services:
   postgres-master:
     container_name: postgres-master
     restart: always
-    image: bitnami/postgresql:latest
+    image: postgres:16
     environment:
       POSTGRES_DB: "postgres"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "12345"
-      POSTGRESQL_REPLICATION_MODE: "master"
-      POSTGRESQL_REPLICATION_USER: "repl_user"
-      POSTGRESQL_REPLICATION_PASSWORD: "12345"
     ports:
       - "15432:5432"
     volumes:
-      - ./lim/database/postgreSQL/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./pg-data:/var/lib/postgresql/data
+      - ./lim/database/postgreSQL/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./lim/database/postgreSQL/test.sql:/docker-entrypoint-initdb.d/02_test.sql
+      - pg-data:/var/lib/postgresql/data
     networks:
       - limnet
-  
+
   postgres-slave:
     container_name: postgres-slave
     restart: always
-    image: bitnami/postgresql:latest
+    image: postgres:16
     depends_on:
       - postgres-master
     environment:
       POSTGRES_DB: "postgres"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "12345"
-      POSTGRESQL_MASTER_HOST: "postgres-master"
-      POSTGRESQL_REPLICATION_MODE: "slave"
-      POSTGRESQL_REPLICATION_USER: "repl_user"
-      POSTGRESQL_REPLICATION_PASSWORD: "12345"
     ports:
       - "15433:5432"
-    volumes:
-      - ./pg-data:/var/lib/postgresql/data
+    networks:
+      - limnet
+
+  lim-streamlit:
+    container_name: lim-streamlit
+    build:
+      context: ./lim-streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - lim-analytics
+    networks:
+      - limnet
+
+  lim-analytics:
+    container_name: lim-analytics
+    build:
+      context: ./lim-analytics
+    ports:
+      - "8090:8000"
+    environment:
+      DB_HOST: postgres-master
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: "12345"
+      DB_PORT: "5432"
+    depends_on:
+      - postgres-master
     networks:
       - limnet
 
@@ -124,3 +144,6 @@ services:
 networks:
   limnet:
     driver: bridge
+
+volumes:
+  pg-data:

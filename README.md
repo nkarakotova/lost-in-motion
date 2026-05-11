@@ -10,6 +10,12 @@ Lost in Motion
 
 ---
 
+### Демонстрация
+
+![demo](./data/LIM.gif)
+
+---
+
 ### Краткий анализ аналогичных решений
 
 | Известное решение | Личный кабинет | Возможность просмотреть расписание | Возможность записаться на занятие |
@@ -98,15 +104,44 @@ Lost in Motion
 
 ![Alt text](./data/UML.svg)
 
-### Макеты
+### Макеты и реализация
 
 С интерактивным макетом можно ознакомиться в [Figma](https://www.figma.com/design/s3Rbvgfy2i5uKpegeXiXpn/LIM?node-id=1-2&t=Ie2rNn1jy8Lzp9n7-1).
-
 Там же можно найти портреты пользователей, пользовательские сценарии и mood board.
 
+Реализованные экраны:
+
+**Расписание**
+![расписание](./data/interface_schedule.png)
+
+**Вход в систему**
+![вход](./data/interface_login.png)
+
+**Создание тренировки**
+![создание тренировки](./data/interface_create.png)
+
+
+
+### Структура проекта
+
+```
+lost-in-motion/
+├── lim/              — Go REST API (основной бэкенд)
+├── lim-front/        — React / TypeScript фронтенд
+├── lim-analytics/    — FastAPI аналитический сервис (Python)
+├── lim-streamlit/    — Streamlit дашборд (Python)
+├── data/             — диаграммы и скриншоты для документации
+├── docker-compose.yaml
+└── nginx.conf
+```
+
+---
+
 ### Технологический стэк
-- Backend – Golang
-- Frontend – TypeScript
+- Backend – Golang (основной REST API)
+- Analytics API – Python / FastAPI
+- Frontend – TypeScript / React
+- Analytics Dashboard – Python / Streamlit
 - Database – PostgreSQL
 - Proxy / Web Server – Nginx
 
@@ -122,19 +157,57 @@ PGADMIN_DEFAULT_PASSWORD="example"
 PGADMIN_PORT=80
 ```
 4. Запустить докер-контейнеры (```docker compose up -d```)
-5. Перейти в директорию lim-front (```cd lim-front```)
-6. Установить зависимости (```npm install```)
-7. Запустить проект (```npm start```)
+
+    В Docker поднимаются:
+    - Go REST API — `http://localhost:8081/api/v1/`
+    - FastAPI аналитика — `http://localhost:8090/docs`
+    - Streamlit дашборд — `http://localhost:8501`
+    - PostgreSQL — порт `15432`
+    - pgAdmin — `http://localhost:5435`
+
+5. Запустить nginx (```nginx -c $(pwd)/nginx.conf```)
+6. Перейти в директорию lim-front (```cd lim-front```)
+7. Установить зависимости (```npm install```)
+8. Запустить проект (```npm start```)
+
+Основной сайт откроется на `http://localhost:3000`, аналитический дашборд — на `http://localhost:8501`.
 
 
-### Эндпоинты
+### Эндпоинты основного приложения
 
-Для ознакомления с эндпоинтами можно посмотреть на swagger. При запуске на своей машине он будет доступен по адресу ```http://localhost```, в общем случае на 8080 порту по пути ```/api/v1/``` (```http://localhost:8080/api/v1/```).
+Swagger доступен по адресу `http://localhost:8080/api/v1/` (через nginx) или напрямую `http://localhost:8081/api/v1/`.
 
 Примеры эндпоинтов:
 
 ![Alt text](./data/swagger_example_1.png)
 ![Alt text](./data/swagger_example_2.png)
+
+---
+
+### Аналитический сервис (FastAPI)
+
+Отдельный микросервис на Python / FastAPI, который подключается к той же БД и предоставляет аналитику по студии.
+
+Swagger аналитического сервиса: `http://localhost:8090/docs`
+
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/stats` | Общая статистика: количество клиентов, тренеров, залов, тренировок |
+| GET | `/coaches/stats` | По каждому тренеру: количество тренировок, записей клиентов, заполненность, направления |
+| GET | `/trainings` | Все тренировки с информацией о тренере, зале и количестве записавшихся |
+
+Пример эндпоинта:
+
+![Alt text](./data/analytics_swagger.png)
+
+Визуальный дашборд на Streamlit доступен по адресу `http://localhost:8501`.
+
+Дашборд показывает:
+- общие метрики студии
+- таблицу статистики по тренерам с заполненностью в %
+- расписание выбранного тренера с разбивкой на предстоящие и проведённые тренировки
+
+![Alt text](./data/analytics_dashboard.png)
 
 ### Отчет по нагрузочному тестированию сервиса до и после включения балансировки NGINX
 
